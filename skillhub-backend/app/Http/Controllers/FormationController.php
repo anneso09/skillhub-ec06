@@ -162,7 +162,7 @@ class FormationController extends Controller
         $user = JWTAuth::user();
 
         $formations = Formation::where('formateur_id', $user->id)
-            ->withCount('enrollments')
+            ->withCount(['enrollments', 'modules'])
             ->get();
 
         return response()->json($formations);
