@@ -41,28 +41,22 @@ SkillHub est une plateforme web qui met en relation des **formateurs** et des **
 ---
 
 ## 📁 Structure du projet
-skillhub/
-├── skillhub-frontend/     ← Application React.js
-│   ├── src/
-│   │   ├── api/           ← Instance Axios + intercepteurs
-│   │   ├── components/    ← Composants réutilisables
-│   │   ├── context/       ← AuthContext (JWT)
-│   │   ├── pages/         ← Pages de l'application
-│   │   └── styles/        ← Variables CSS globales
-│   └── ...
-│
-├── skillhub-backend/      ← API REST Laravel
-│   ├── app/
-│   │   ├── Http/Controllers/
-│   │   ├── Models/
-│   │   └── Services/      ← ActivityLogService (MongoDB)
-│   ├── database/
-│   │   ├── migrations/
-│   │   └── factories/
-│   ├── tests/Feature/     ← Tests unitaires
-│   └── docs/              ← Documentation API
-│
-└── README.md
+
+**Frontend** `skillhub-frontend/src/`
+- `api/` — Instance Axios + intercepteurs JWT
+- `components/` — Composants réutilisables (Navbar, modals, cards)
+- `context/` — AuthContext (gestion du token JWT)
+- `pages/` — Pages de l'application
+- `styles/` — Variables CSS globales (charte graphique)
+
+**Backend** `skillhub-backend/`
+- `app/Http/Controllers/` — Contrôleurs de l'API REST
+- `app/Models/` — Modèles Eloquent
+- `app/Services/` — ActivityLogService (MongoDB)
+- `database/migrations/` — Migrations MySQL
+- `database/factories/` — Factories pour les tests
+- `tests/Feature/` — Tests unitaires PHPUnit
+- `docs/` — Documentation API OpenAPI/Swagger
 ---
 
 ## ⚙️ Prérequis
@@ -225,18 +219,13 @@ Crée des comptes via la modal **S'inscrire** sur la page d'accueil.
 ---
 
 ## 🏗️ Architecture
-┌─────────────────┐         ┌─────────────────┐
-│   React.js      │ ──API── │   Laravel 12    │
-│   (Port 5173)   │  REST   │   (Port 8000)   │
-└─────────────────┘         └────────┬────────┘
-│
-┌───────────┴───────────┐
-│                       │
-┌──────▼──────┐       ┌───────▼──────┐
-│   MySQL     │       │   MongoDB    │
-│  (données)  │       │    (logs)    │
-└─────────────┘       └──────────────┘
 
+Le projet suit une architecture **client-serveur** découplée :
+
+- **React.js** (port 5173) communique avec l'API via des requêtes HTTP + token JWT
+- **Laravel** (port 8000) expose une API REST sécurisée
+- **MySQL** stocke les données principales (users, formations, modules, enrollments)
+- **MongoDB** enregistre les logs d'activité (vues, inscriptions, modifications)
 ---
 
 ## 👥 Auteur
