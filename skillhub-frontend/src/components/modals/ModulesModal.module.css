@@ -234,3 +234,16 @@
   font-size: 13px;
   color: var(--color-text-muted);
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .overlay {
+    padding: 12px;
+    align-items: flex-end; /* modal en bas sur mobile */
+  }
+
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 92vh;
+  }
+}

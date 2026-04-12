@@ -576,3 +576,104 @@
 .badgeDebutant      { display: inline-block; font-size: 11px; padding: 4px 12px; border-radius: var(--radius-full); background: var(--color-debutant-bg);      color: var(--color-debutant-text);      font-weight: 600; margin-bottom: 12px; }
 .badgeIntermediaire { display: inline-block; font-size: 11px; padding: 4px 12px; border-radius: var(--radius-full); background: var(--color-intermediaire-bg); color: var(--color-intermediaire-text); font-weight: 600; margin-bottom: 12px; }
 .badgeAvance        { display: inline-block; font-size: 11px; padding: 4px 12px; border-radius: var(--radius-full); background: var(--color-avance-bg);        color: var(--color-avance-text);        font-weight: 600; margin-bottom: 12px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .hero {
+    padding: 48px 24px 40px;
+  }
+
+  .heroTitle { font-size: 32px; }
+
+  .statsBar { flex-wrap: wrap; }
+
+  .statItem {
+    flex: 1 1 50%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .sectionGreen,
+  .sectionWhite {
+    padding: 48px 24px;
+  }
+
+  .conceptGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .avantagesGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .valeursGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .catalogueGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .catalogueHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .ctaBanner { padding: 48px 24px; }
+  .ctaTitle  { font-size: 24px; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 36px 16px 32px; }
+  .heroTitle { font-size: 26px; }
+
+  .heroActions {
+    flex-direction: column;
+  }
+
+  .btnHeroPrimary,
+  .btnHeroSecondary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .statItem { flex: 1 1 100%; }
+
+  .sectionGreen,
+  .sectionWhite {
+    padding: 36px 16px;
+  }
+
+  .valeursGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerBottom {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .ctaActions {
+    flex-direction: column;
+  }
+
+  .btnCtaPrimary,
+  .btnCtaSecondary {
+    width: 100%;
+  }
+}

@@ -9,10 +9,7 @@ const NIVEAUX    = ['Débutant', 'Intermédiaire', 'Avancé'];
 const PER_PAGE   = 9;
 
 const FILTRES_INIT = {
-  search:     '',
-  categories: [...CATEGORIES],
-  niveaux:    [...NIVEAUX],
-  tri:        'popularite',
+  search: '', categories: [...CATEGORIES], niveaux: [...NIVEAUX], tri: 'popularite',
 };
 
 export default function Formations() {
@@ -20,8 +17,8 @@ export default function Formations() {
   const [loading,    setLoading]    = useState(true);
   const [filtres,    setFiltres]    = useState(FILTRES_INIT);
   const [page,       setPage]       = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false); // ← nouveau
 
-  // Appel API au montage
   useEffect(() => {
     const fetchFormations = async () => {
       try {
@@ -37,7 +34,6 @@ export default function Formations() {
     fetchFormations();
   }, []);
 
-  // Filtrage + tri côté front
   const filtered = useMemo(() => {
     let result = formations.filter(f => {
       const matchCat    = filtres.categories.includes(f.categorie);
@@ -46,37 +42,25 @@ export default function Formations() {
                        || f.categorie.toLowerCase().includes(filtres.search.toLowerCase());
       return matchCat && matchNiveau && matchSearch;
     });
-
     if (filtres.tri === 'vues') {
       result = [...result].sort((a, b) => (b.nombre_de_vues ?? 0) - (a.nombre_de_vues ?? 0));
     } else if (filtres.tri === 'recent') {
       result = [...result].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     } else {
-      // popularite = tri par apprenants
       result = [...result].sort((a, b) => (b.enrollments_count ?? 0) - (a.enrollments_count ?? 0));
     }
-
     return result;
   }, [formations, filtres]);
 
-  // Pagination
-  const totalPages  = Math.ceil(filtered.length / PER_PAGE);
-  const paginated   = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const handleFiltresChange = (newFiltres) => {
-    setFiltres(newFiltres);
-    setPage(1); // reset page quand on filtre
-  };
+  const handleFiltresChange = (newFiltres) => { setFiltres(newFiltres); setPage(1); };
+  const handleReset         = () => { setFiltres(FILTRES_INIT); setPage(1); };
 
-  const handleReset = () => {
-    setFiltres(FILTRES_INIT);
-    setPage(1);
-  };
-
-  // Tags actifs affichés
-  const showAllCats   = filtres.categories.length === CATEGORIES.length;
+  const showAllCats    = filtres.categories.length === CATEGORIES.length;
   const showAllNiveaux = filtres.niveaux.length === NIVEAUX.length;
-  const hasFilter     = !showAllCats || !showAllNiveaux || filtres.search;
+  const hasFilter      = !showAllCats || !showAllNiveaux || filtres.search;
 
   return (
     <div className={styles.page}>
@@ -90,19 +74,20 @@ export default function Formations() {
         </p>
       </div>
 
-      {/* Layout sidebar + grille */}
+      {/* Layout */}
       <div className={styles.layout}>
 
-        {/* Sidebar filtres */}
-        <FiltresSidebar
-          filtres={filtres}
-          onChange={handleFiltresChange}
-          onReset={handleReset}
-        />
+        {/* Sidebar desktop — cachée sur mobile */}
+        <div className={styles.sidebarDesktop}>
+          <FiltresSidebar
+            filtres={filtres}
+            onChange={handleFiltresChange}
+            onReset={handleReset}
+          />
+        </div>
 
-        {/* Contenu principal */}
+        {/* Contenu */}
         <div>
-          {/* Barre résultats */}
           <div className={styles.resultsBar}>
             <span className={styles.resultsCount}>
               <strong>{filtered.length}</strong> formation{filtered.length > 1 ? 's' : ''} trouvée{filtered.length > 1 ? 's' : ''}
@@ -118,7 +103,6 @@ export default function Formations() {
             </select>
           </div>
 
-          {/* Tags actifs */}
           {hasFilter && (
             <div className={styles.activeTags}>
               <span className={styles.tagLabel}>Filtres :</span>
@@ -134,25 +118,18 @@ export default function Formations() {
             </div>
           )}
 
-          {/* Skeleton loading */}
           {loading && (
             <div className={styles.loadingGrid}>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className={styles.skeleton} />
-              ))}
+              {[...Array(6)].map((_, i) => <div key={i} className={styles.skeleton} />)}
             </div>
           )}
 
-          {/* Grille formations */}
           {!loading && filtered.length > 0 && (
             <div className={styles.grid}>
-              {paginated.map(f => (
-                <FormationCard key={f.id} formation={f} />
-              ))}
+              {paginated.map(f => <FormationCard key={f.id} formation={f} />)}
             </div>
           )}
 
-          {/* Empty state */}
           {!loading && filtered.length === 0 && (
             <div className={styles.emptyState}>
               <div className={styles.emptyEmoji}>🔍</div>
@@ -161,15 +138,9 @@ export default function Formations() {
             </div>
           )}
 
-          {/* Pagination */}
           {!loading && totalPages > 1 && (
             <div className={styles.pagination}>
-              <button
-                className={styles.pageBtn}
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 1}
-              >←</button>
-
+              <button className={styles.pageBtn} onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</button>
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i + 1}
@@ -179,16 +150,36 @@ export default function Formations() {
                   {i + 1}
                 </button>
               ))}
-
-              <button
-                className={styles.pageBtn}
-                onClick={() => setPage(p => p + 1)}
-                disabled={page === totalPages}
-              >→</button>
+              <button className={styles.pageBtn} onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Bouton filtres flottant — mobile uniquement */}
+      <button className={styles.btnFiltresMobile} onClick={() => setDrawerOpen(true)}>
+        🎛️ Filtres {hasFilter && `(actifs)`}
+      </button>
+
+      {/* Drawer filtres mobile */}
+      {drawerOpen && (
+        <div className={styles.filtresOverlayOpen} onClick={() => setDrawerOpen(false)}>
+          <div className={styles.filtresDrawer} onClick={e => e.stopPropagation()}>
+            <div className={styles.filtresDrawerHeader}>
+              <span className={styles.filtresDrawerTitle}>🎛️ Filtres</span>
+              <button className={styles.filtresDrawerClose} onClick={() => setDrawerOpen(false)}>×</button>
+            </div>
+            <FiltresSidebar
+              filtres={filtres}
+              onChange={handleFiltresChange}
+              onReset={handleReset}
+            />
+            <button className={styles.btnAppliquer} onClick={() => setDrawerOpen(false)}>
+              Voir les {filtered.length} formations
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

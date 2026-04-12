@@ -14,8 +14,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal {
@@ -28,8 +32,14 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
@@ -59,7 +69,9 @@
   transition: color 0.12s;
 }
 
-.closeBtn:hover { color: var(--color-white); }
+.closeBtn:hover {
+  color: var(--color-white);
+}
 
 .body {
   padding: 28px 24px;
@@ -98,7 +110,9 @@
   font-family: var(--font-family);
 }
 
-.input:focus { border-color: var(--color-primary); }
+.input:focus {
+  border-color: var(--color-primary);
+}
 
 .error {
   background: var(--color-danger-bg);
@@ -122,7 +136,9 @@
   padding: 14px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
   background: var(--color-white);
 }
 
@@ -131,7 +147,10 @@
   background: var(--color-primary-light);
 }
 
-.roleEmoji { font-size: 24px; margin-bottom: 6px; }
+.roleEmoji {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
 
 .roleLabel {
   font-size: 13px;
@@ -159,8 +178,13 @@
   margin-top: 4px;
 }
 
-.btnSubmit:hover    { opacity: 0.88; }
-.btnSubmit:disabled { opacity: 0.55; cursor: not-allowed; }
+.btnSubmit:hover {
+  opacity: 0.88;
+}
+.btnSubmit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
 .switchText {
   text-align: center;
@@ -178,4 +202,42 @@
   padding: 0;
 }
 
-.switchLink:hover { text-decoration: underline; }
+.switchLink:hover {
+  text-decoration: underline;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .overlay {
+    padding: 12px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+
+  .modal {
+    border-radius: var(--radius-xl);
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  .body {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .nameGrid {
+    grid-template-columns: 1fr; /* prénom et nom l'un sous l'autre sur mobile */
+  }
+
+  .roleGrid {
+    gap: 8px;
+  }
+
+  .roleCard {
+    padding: 10px;
+  }
+
+  .roleEmoji {
+    font-size: 20px;
+  }
+}

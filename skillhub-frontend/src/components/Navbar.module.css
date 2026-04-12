@@ -62,7 +62,9 @@
   color: var(--color-white);
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .btnConnexion:hover {
@@ -149,8 +151,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdownHeader {
@@ -222,4 +230,42 @@
 .dropdownBtnDanger:hover {
   background: var(--color-danger-bg);
   color: var(--color-danger);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 12px 20px;
+  }
+
+  .navRight {
+    gap: 12px;
+  }
+
+  .btnConnexion,
+  .btnInscription {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 10px 16px;
+  }
+
+  .profileName {
+    display: none;
+  }
+
+  /* ← Supprime le display:none sur btnConnexion */
+  .btnConnexion {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .btnInscription {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
 }

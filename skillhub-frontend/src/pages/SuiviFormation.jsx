@@ -15,8 +15,8 @@ export default function SuiviFormation() {
 
   const [formation,  setFormation]  = useState(null);
   const [modules,    setModules]    = useState([]);
-  const [completed,  setCompleted]  = useState([]); // ids des modules complétés
-  const [current,    setCurrent]    = useState(0);  // index du module actif
+  const [completed,  setCompleted]  = useState([]);
+  const [current,    setCurrent]    = useState(0);
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
 
@@ -32,16 +32,14 @@ export default function SuiviFormation() {
       setFormation(resF.data);
       setModules(resM.data);
 
-      // Calcule les modules complétés depuis la progression
       const enrollments = resE.data.data ?? resE.data;
       const enrollment  = enrollments.find(e => e.formation?.id === parseInt(id));
       const progression = enrollment?.progression ?? 0;
 
       if (resM.data.length > 0) {
-        const nbCompleted = Math.round((progression / 100) * resM.data.length);
+        const nbCompleted  = Math.round((progression / 100) * resM.data.length);
         const completedIds = resM.data.slice(0, nbCompleted).map(m => m.id);
         setCompleted(completedIds);
-        // Positionne sur le premier module non complété
         setCurrent(Math.min(nbCompleted, resM.data.length - 1));
       }
     } catch (err) {
@@ -62,7 +60,6 @@ export default function SuiviFormation() {
     const newCompleted = [...completed, module.id];
     setCompleted(newCompleted);
 
-    // Calcule la nouvelle progression
     const progression = Math.round((newCompleted.length / modules.length) * 100);
 
     setSaving(true);
@@ -74,7 +71,6 @@ export default function SuiviFormation() {
       setSaving(false);
     }
 
-    // Passe automatiquement au module suivant
     if (current < modules.length - 1) {
       setCurrent(current + 1);
     }
@@ -85,9 +81,9 @@ export default function SuiviFormation() {
     return <div className={styles.loading}>Formation introuvable.</div>;
   }
 
-  const currentModule = modules[current];
-  const isDone        = completed.includes(currentModule?.id);
-  const progression   = Math.round((completed.length / modules.length) * 100);
+  const currentModule  = modules[current];
+  const isDone         = completed.includes(currentModule?.id);
+  const progression    = Math.round((completed.length / modules.length) * 100);
   const completedCount = completed.length;
 
   const getModuleStatus = (module, index) => {
@@ -114,9 +110,10 @@ export default function SuiviFormation() {
 
       <div className={styles.layout}>
 
-        {/* Colonne gauche */}
-        <div>
-          {/* Header formation */}
+        {/* Colonne gauche — order 0 par défaut */}
+        <div className={styles.colLeft}>
+
+          {/* Header formation — order 0, reste en haut */}
           <div className={styles.formationHeader}>
             <div className={styles.formationHeaderTop}>
               <BadgeNiveau niveau={formation.niveau} />
@@ -135,56 +132,54 @@ export default function SuiviFormation() {
             </div>
           </div>
 
-          {/* Contenu module actif */}
-          <div className={styles.moduleCard}>
-            <div className={styles.moduleCardHeader}>
-              <div className={styles.moduleTag}>
-                Module {current + 1}
-                {isDone ? ' — Complété' : current === completed.length ? ' — En cours' : ' — À venir'}
+          {/* Contenu module — order 2, passe après la sidebar */}
+          <div className={styles.moduleCardWrapper}>
+            <div className={styles.moduleCard}>
+              <div className={styles.moduleCardHeader}>
+                <div className={styles.moduleTag}>
+                  Module {current + 1}
+                  {isDone ? ' — Complété' : current === completed.length ? ' — En cours' : ' — À venir'}
+                </div>
+                <h2 className={styles.moduleTitle}>{currentModule?.titre}</h2>
               </div>
-              <h2 className={styles.moduleTitle}>{currentModule?.titre}</h2>
-            </div>
-            <div className={styles.moduleBody}>
-              <div
-                className={styles.moduleContent}
-                dangerouslySetInnerHTML={{
-                  __html: currentModule?.contenu
-                    ? currentModule.contenu.replace(/\n/g, '<br/>')
-                    : '<p style="color:#9ca3af;">Contenu à venir...</p>'
-                }}
-              />
-
-              {/* Navigation */}
-              <div className={styles.moduleNav}>
-                <button
-                  className={styles.btnNav}
-                  onClick={() => setCurrent(c => c - 1)}
-                  disabled={current === 0}
-                >
-                  ← Précédent
-                </button>
-
-                <button
-                  className={styles.btnComplete}
-                  onClick={handleComplete}
-                  disabled={isDone || saving}
-                >
-                  {saving ? 'Sauvegarde...' : isDone ? '✓ Module terminé' : 'Marquer comme terminé ✓'}
-                </button>
-
-                <button
-                  className={styles.btnNav}
-                  onClick={() => setCurrent(c => c + 1)}
-                  disabled={current === modules.length - 1}
-                >
-                  Suivant →
-                </button>
+              <div className={styles.moduleBody}>
+                <div
+                  className={styles.moduleContent}
+                  dangerouslySetInnerHTML={{
+                    __html: currentModule?.contenu
+                      ? currentModule.contenu.replace(/\n/g, '<br/>')
+                      : '<p style="color:#9ca3af;">Contenu à venir...</p>'
+                  }}
+                />
+                <div className={styles.moduleNav}>
+                  <button
+                    className={styles.btnNav}
+                    onClick={() => setCurrent(c => c - 1)}
+                    disabled={current === 0}
+                  >
+                    ← Précédent
+                  </button>
+                  <button
+                    className={styles.btnComplete}
+                    onClick={handleComplete}
+                    disabled={isDone || saving}
+                  >
+                    {saving ? 'Sauvegarde...' : isDone ? '✓ Module terminé' : 'Marquer comme terminé ✓'}
+                  </button>
+                  <button
+                    className={styles.btnNav}
+                    onClick={() => setCurrent(c => c + 1)}
+                    disabled={current === modules.length - 1}
+                  >
+                    Suivant →
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar modules — order 1, entre header et contenu sur mobile */}
         <div className={styles.sidebar}>
           <div className={styles.sidebarCard}>
             <div className={styles.sidebarHeader}>
@@ -193,12 +188,12 @@ export default function SuiviFormation() {
             </div>
             <div className={styles.sidebarList}>
               {modules.map((m, i) => {
-                const status   = getModuleStatus(m, i);
-                const isActive = i === current;
+                const status    = getModuleStatus(m, i);
+                const isActive  = i === current;
 
-                let itemClass  = styles.sidebarItemDefault;
-                let iconClass  = styles.sidebarIconDefault;
-                let textClass  = styles.sidebarItemTextDefault;
+                let itemClass   = styles.sidebarItemDefault;
+                let iconClass   = styles.sidebarIconDefault;
+                let textClass   = styles.sidebarItemTextDefault;
                 let iconContent = i + 1;
 
                 if (status === 'done') {

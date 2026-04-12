@@ -111,3 +111,16 @@
 
 .btnDelete:hover    { opacity: 0.88; }
 .btnDelete:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .overlay {
+    padding: 12px;
+    align-items: flex-end; /* modal en bas sur mobile */
+  }
+
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 92vh;
+  }
+}

@@ -399,3 +399,40 @@
   border-radius: var(--radius-full);
   background: var(--color-avance-bg); color: var(--color-avance-text); font-weight: 600;
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .breadcrumb { padding: 12px 24px; }
+
+  .hero { padding: 28px 24px; }
+
+  .heroInner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .heroTitle { font-size: 24px; }
+
+  .heroMeta {
+    gap: 16px;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    padding: 24px;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb { padding: 10px 16px; }
+  .hero       { padding: 24px 16px; }
+  .content    { padding: 16px; }
+
+  .heroTitle  { font-size: 20px; }
+
+  .heroMeta {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
