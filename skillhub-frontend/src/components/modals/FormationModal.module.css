@@ -57,8 +57,6 @@
   font-size: 22px;
   cursor: pointer;
   line-height: 1;
-  padding: 0;
-  transition: color 0.12s;
 }
 
 .closeBtn:hover { color: var(--color-white); }
@@ -174,3 +172,16 @@
 
 .btnSubmit:hover    { opacity: 0.88; }
 .btnSubmit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .overlay {
+    padding: 12px;
+    align-items: flex-end; /* modal en bas sur mobile */
+  }
+
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 92vh;
+  }
+}
