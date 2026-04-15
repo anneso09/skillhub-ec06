@@ -1,16 +1,20 @@
 package com.example.auth_tp3.service;
 
-import com.example.auth_tp3.entity.User;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.example.auth_tp3.entity.User;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 
 @Service
 public class JwtService {
@@ -25,6 +29,7 @@ public class JwtService {
         claims.put("role", user.getRole());
         claims.put("nom", user.getNom());
         claims.put("prenom", user.getPrenom());
+        claims.put("userId", user.getId());
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -39,4 +44,12 @@ public class JwtService {
         byte[] keyBytes = jwtSecret.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    public Claims validateToken(String token) {
+    return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+}
 }
