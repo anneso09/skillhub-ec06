@@ -92,6 +92,8 @@
 /* ── Profil connecté ── */
 .profileWrapper {
   position: relative;
+  padding-bottom: 8px; /* ← comble le gap */
+  margin-bottom: -8px;
 }
 
 .profileTrigger {
@@ -138,7 +140,7 @@
 /* ── Dropdown ── */
 .dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 0px);
   right: 0;
   background: var(--color-white);
   border-radius: var(--radius-md);
