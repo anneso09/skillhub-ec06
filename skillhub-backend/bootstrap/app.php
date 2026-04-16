@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,9 +14,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
-        ]);
+
+    $middleware->alias([
+        'role' => \App\Http\Middleware\CheckRole::class,
+        'jwt.verify' => \App\Http\Middleware\JwtVerifyMiddleware::class,
+    ]);
+
+   
+
+$middleware->redirectGuestsTo(function (Request $request) {
+    return null;
+});
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
