@@ -10,7 +10,7 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, string $role)
     {
-        $user = JWTAuth::user();
+       $user = (object) [     'role' => $request->auth_user_role ];
 
         if (!$user || $user->role !== $role) {
             return response()->json([

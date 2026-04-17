@@ -6,14 +6,14 @@ use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\EnrollmentController;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+// Route::post('/register', [AuthController::class, 'register']);
+// Route::post('/login',    [AuthController::class, 'login']);
 
 Route::get('/formations',              [FormationController::class, 'index']);
 Route::get('/formations/{id}',         [FormationController::class, 'show']);
 Route::get('/formations/{id}/modules', [ModuleController::class, 'index']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware('jwt.verify')->group(function () {
 
     Route::post('/logout',  [AuthController::class, 'logout']);
     Route::get('/profile',  [AuthController::class, 'profile']);
