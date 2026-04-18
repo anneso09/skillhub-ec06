@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Formation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\ActivityLogService;
 
 class FormationController extends Controller
@@ -31,7 +30,7 @@ class FormationController extends Controller
         return response()->json($formations);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $formation = Formation::with([
             'formateur:id,nom,prenom',
@@ -46,7 +45,7 @@ class FormationController extends Controller
 
         (new ActivityLogService())->log('course_view', [
             'course_id' => (int) $id,
-            'user_id'   => optional(JWTAuth::user())->id,
+            'user_id' => $request->auth_user_id ?? null,
         ]);
 
         return response()->json($formation);
@@ -65,7 +64,10 @@ class FormationController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = JWTAuth::user();
+       $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         $formation = Formation::create([
             'titre'        => $request->titre,
@@ -94,7 +96,10 @@ class FormationController extends Controller
             return response()->json(['message' => 'Formation introuvable'], 404);
         }
 
-        $user = JWTAuth::user();
+       $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         if ($formation->formateur_id !== $user->id) {
             return response()->json([
@@ -130,7 +135,7 @@ class FormationController extends Controller
         ]);
     }
 
-    public function destroy($id)
+   public function destroy(Request $request, $id)
     {
         $formation = Formation::find($id);
 
@@ -138,7 +143,10 @@ class FormationController extends Controller
             return response()->json(['message' => 'Formation introuvable'], 404);
         }
 
-        $user = JWTAuth::user();
+        $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         if ($formation->formateur_id !== $user->id) {
             return response()->json([
@@ -157,9 +165,12 @@ class FormationController extends Controller
         return response()->json(['message' => 'Formation supprimée']);
     }
 
-    public function mesFormations()
+  public function mesFormations(Request $request)
     {
-        $user = JWTAuth::user();
+        $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         $formations = Formation::where('formateur_id', $user->id)
             ->withCount(['enrollments', 'modules'])
