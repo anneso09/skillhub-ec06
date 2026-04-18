@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import styles from './LoginModal.module.css';
 
 export default function LoginModal({ onClose, onSwitchToRegister }) {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const navigate  = useNavigate();
 
   const [form,    setForm]    = useState({ email: '', password: '' });

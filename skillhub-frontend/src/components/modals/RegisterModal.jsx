@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/axios";
 import styles from "./RegisterModal.module.css";
-
+ 
 export default function RegisterModal({ onClose, onSwitchToLogin }) {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
-
+ 
   const [form, setForm] = useState({
     nom: "",
     prenom: "",
@@ -18,12 +18,12 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+ 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.password_confirmation) {
@@ -34,8 +34,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     setError("");
     try {
       // 1. Inscription
-      await api.post("/register", form);
-      // 2. Connexion automatique après inscription
+      await register(form);
       const user = await login(form.email, form.password);
       onClose();
       if (user.role === "formateur") {
@@ -56,7 +55,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
       setLoading(false);
     }
   };
-
+ 
   return (
     <div
       className={styles.overlay}
@@ -70,11 +69,11 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
             ×
           </button>
         </div>
-
+ 
         {/* Body */}
         <form className={styles.body} onSubmit={handleSubmit}>
           {error && <div className={styles.error}>{error}</div>}
-
+ 
           {/* Choix du rôle — CDC : l'utilisateur choisit apprenant ou formateur */}
           <div>
             <div className={styles.label} style={{ marginBottom: 8 }}>
@@ -99,7 +98,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               </div>
             </div>
           </div>
-
+ 
           <div className={styles.nameGrid}>
             <div className={styles.field}>
               <label className={styles.label}>Prénom</label>
@@ -113,7 +112,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
                 required
               />
             </div>
-
+ 
             <div className={styles.field}>
               <label className={styles.label}>Nom</label>
               <input
@@ -127,7 +126,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               />
             </div>
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Adresse email</label>
             <input
@@ -140,7 +139,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               required
             />
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Mot de passe</label>
             <input
@@ -153,7 +152,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               required
             />
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Confirmer le mot de passe</label>
             <input
@@ -166,13 +165,13 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               required
             />
           </div>
-
+ 
           <button className={styles.btnSubmit} type="submit" disabled={loading}>
             {loading
               ? "Création du compte..."
               : "Créer mon compte gratuitement"}
           </button>
-
+ 
           <p className={styles.switchText}>
             Déjà un compte ?{" "}
             <button
@@ -188,3 +187,6 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     </div>
   );
 }
+ 
+
+ 

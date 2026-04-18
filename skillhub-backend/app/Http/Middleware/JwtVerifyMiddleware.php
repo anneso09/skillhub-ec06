@@ -40,8 +40,8 @@ class JwtVerifyMiddleware
              * MODE RÉEL (avec Spring Boot)
              */
             try {
-                $response = Http::timeout(2)->post(
-                    'http://localhost:8080/api/auth/validate',
+                $response = Http::timeout(5)->post(
+                    'http://127.0.0.1:8080/api/auth/validate',
                     ['token' => $token]
                 );
 
