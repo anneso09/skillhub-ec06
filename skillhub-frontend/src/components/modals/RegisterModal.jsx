@@ -34,7 +34,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     setError("");
 try {
 
-    await authApi.post("auth/register", { 
+    await authApi.post("/auth/register", { 
     email: form.email, 
     password: form.password 
 }); 
