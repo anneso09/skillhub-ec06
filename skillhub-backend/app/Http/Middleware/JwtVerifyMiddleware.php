@@ -27,7 +27,7 @@ class JwtVerifyMiddleware
          * MODE SIMULATION (utilisé pour le développement)
          * Permet de tester sans Spring Boot
          */
-        if (true) { // 👉 tu peux remplacer par env('AUTH_SIMULATION', true)
+        if (false) { // 👉 tu peux remplacer par env('AUTH_SIMULATION', true)
             
             $payload = [
                 'email' => 'test@test.com',
