@@ -1,5 +1,14 @@
 import axios from 'axios';
 
+// 1. Instance pour Spring Boot (Authentification)
+export const authApi = axios.create({
+  baseURL: 'http://localhost:8080/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 2. Instance pour Laravel (Formations / Dashboard)
 const api = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: {
@@ -8,7 +17,7 @@ const api = axios.create({
   },
 });
 
-// Injecte le token JWT automatiquement sur chaque requête
+// Intercepteur pour injecter le token (valable pour Laravel)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('skillhub_token');
@@ -20,17 +29,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Gère l'expiration du token (401 = déconnexion automatique)
+// Gestion du 401 (Déconnexion)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('skillhub_token');
-      localStorage.removeItem('skillhub_user');
+      localStorage.clear();
       window.location.href = '/';
     }
     return Promise.reject(error);
   }
 );
 
-export default api;
+export default api; 
