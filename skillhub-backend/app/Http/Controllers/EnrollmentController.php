@@ -9,9 +9,11 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\ActivityLogService;
 
 class EnrollmentController extends Controller
+
 {
     public function store($formationId)
     {
+        // Vérification que la formation existe
         $formation = Formation::find($formationId);
 
         if (!$formation) {
