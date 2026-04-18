@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from 'axios';
-import { SPRING_BOOT_URL } from '../config/api';
+// import { SPRING_BOOT_URL } from '../config/api';
 import authApi from "../api/authApi";
 
 const AuthContext = createContext(null);
@@ -64,7 +64,7 @@ const login = async (email, password) => {
             // Puisque son Java ne renvoie pas le rôle, on l'injecte ici
             const userData = {
                 email: email,
-                role: "apprenant" // On le force pour débloquer tes ProtectedRoutes
+                role: response.data.role // On le force pour débloquer tes ProtectedRoutes
             };
 
             // Stockage pour rester connecté au rafraîchissement
@@ -82,7 +82,7 @@ const login = async (email, password) => {
 // Register
 const register = async (formData) => {
     // Appel vers Spring Boot au lieu de Laravel
-    await authApi.post("/register", {
+    await authApi.post("/auth/register", {
       nom: formData.nom,
       prenom: formData.prenom,
       email: formData.email,
@@ -94,7 +94,7 @@ const register = async (formData) => {
   // Logout
   const logout = async () => {
     try {
-      await api.post("/logout");
+      await api.post("/auth/logout");
     } catch (e) {
       // déconnexion front même si erreur réseau
     } finally {
@@ -115,6 +115,7 @@ const register = async (formData) => {
         isFormateur: user?.role === "formateur",
         isApprenant: user?.role === "apprenant",
         login,
+        register,
         logout,
       }}
     >

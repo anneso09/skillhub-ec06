@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import api, { authApi } from "../../api/axios";
+import api from "../../api/axios";
 import styles from "./RegisterModal.module.css";
-
+ 
 export default function RegisterModal({ onClose, onSwitchToLogin }) {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
-
+ 
   const [form, setForm] = useState({
     nom: "",
     prenom: "",
@@ -18,12 +18,12 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+ 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.password_confirmation) {
@@ -32,29 +32,30 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     }
     setLoading(true);
     setError("");
-try {
-
-    await authApi.post("/auth/register", { 
-    email: form.email, 
-    password: form.password 
-}); 
-
-    const user = await login(form.email, form.password);
-    
-    onClose();
-    navigate("/dashboard/apprenant");
-
-} catch (err) {
-    if (err.response?.status === 409) {
-        setError("Cet email est déjà utilisé.");
-    } else {
-        setError(err.response?.data?.message || "Erreur de connexion au serveur Java.");
+    try {
+      // 1. Inscription
+      await register(form);
+      const user = await login(form.email, form.password);
+      onClose();
+      if (user.role === "formateur") {
+        navigate("/dashboard/formateur");
+      } else {
+        navigate("/dashboard/apprenant");
+      }
+    } catch (err) {
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        // Affiche la première erreur de validation Laravel
+        const firstError = Object.values(errors)[0][0];
+        setError(firstError);
+      } else {
+        setError(err.response?.data?.message || "Une erreur est survenue.");
+      }
+    } finally {
+      setLoading(false);
     }
-} finally {
-    setLoading(false);
-}
   };
-
+ 
   return (
     <div
       className={styles.overlay}
@@ -68,11 +69,11 @@ try {
             ×
           </button>
         </div>
-
+ 
         {/* Body */}
         <form className={styles.body} onSubmit={handleSubmit}>
           {error && <div className={styles.error}>{error}</div>}
-
+ 
           {/* Choix du rôle — CDC : l'utilisateur choisit apprenant ou formateur */}
           <div>
             <div className={styles.label} style={{ marginBottom: 8 }}>
@@ -97,7 +98,7 @@ try {
               </div>
             </div>
           </div>
-
+ 
           <div className={styles.nameGrid}>
             <div className={styles.field}>
               <label className={styles.label}>Prénom</label>
@@ -111,7 +112,7 @@ try {
                 required
               />
             </div>
-
+ 
             <div className={styles.field}>
               <label className={styles.label}>Nom</label>
               <input
@@ -125,7 +126,7 @@ try {
               />
             </div>
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Adresse email</label>
             <input
@@ -138,7 +139,7 @@ try {
               required
             />
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Mot de passe</label>
             <input
@@ -151,7 +152,7 @@ try {
               required
             />
           </div>
-
+ 
           <div className={styles.field}>
             <label className={styles.label}>Confirmer le mot de passe</label>
             <input
@@ -164,13 +165,13 @@ try {
               required
             />
           </div>
-
+ 
           <button className={styles.btnSubmit} type="submit" disabled={loading}>
             {loading
               ? "Création du compte..."
               : "Créer mon compte gratuitement"}
           </button>
-
+ 
           <p className={styles.switchText}>
             Déjà un compte ?{" "}
             <button
@@ -186,3 +187,6 @@ try {
     </div>
   );
 }
+ 
+
+ 
