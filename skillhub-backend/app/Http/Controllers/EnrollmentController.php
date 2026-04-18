@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\ActivityLogService;
 
 class EnrollmentController extends Controller
 {
-    public function store($formationId)
+   public function store(Request $request, $formationId)
     {
         $formation = Formation::find($formationId);
 
@@ -18,7 +17,10 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Formation introuvable'], 404);
         }
 
-        $user = JWTAuth::user();
+        $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         $dejInscrit = Enrollment::where('utilisateur_id', $user->id)
             ->where('formation_id', $formationId)
@@ -45,9 +47,12 @@ class EnrollmentController extends Controller
         ], 201);
     }
 
-    public function destroy($formationId)
+    public function destroy(Request $request, $formationId)
     {
-        $user = JWTAuth::user();
+        $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         $enrollment = Enrollment::where('utilisateur_id', $user->id)
             ->where('formation_id', $formationId)
@@ -62,28 +67,29 @@ class EnrollmentController extends Controller
         return response()->json(['message' => 'Désinscription réussie']);
     }
 
-    public function mesFormations()
-    {
-        $user = JWTAuth::user();
+public function mesFormations(Request $request)
+{
+    $userId = $request->auth_user_id;
 
-        $formations = Enrollment::where('utilisateur_id', $user->id)
-            ->with('formation.formateur:id,nom,prenom')
-            ->get()
-            ->map(function ($enrollment) {
-                return [
-                    'enrollment_id' => $enrollment->id,
-                    'progression'   => $enrollment->progression,
-                    'date_inscription' => $enrollment->date_inscription,
-                    'formation'     => $enrollment->formation,
-                ];
-            });
-
-        return response()->json($formations);
+    if (!$userId) {
+        return response()->json([
+            'message' => 'Utilisateur non authentifié'
+        ], 401);
     }
+
+    $formations = Enrollment::where('utilisateur_id', $userId)
+        ->with('formation.formateur:id,nom,prenom')
+        ->get();
+
+    return response()->json($formations);
+}
 
     public function updateProgression(Request $request, $formationId)
     {
-        $user = JWTAuth::user();
+        $user = (object)[
+    'id' => $request->auth_user_id,
+    'role' => $request->auth_user_role
+];
 
         $enrollment = Enrollment::where('utilisateur_id', $user->id)
             ->where('formation_id', $formationId)

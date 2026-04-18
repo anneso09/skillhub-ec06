@@ -13,6 +13,7 @@ return new class extends Migration
 {
     Schema::create('enrollments', function (Blueprint $table) {
         $table->id();
+        
         $table->foreignId('utilisateur_id')->constrained('users')->onDelete('cascade');
         $table->foreignId('formation_id')->constrained('formations')->onDelete('cascade');
         $table->unsignedInteger('progression')->default(0);
@@ -20,6 +21,9 @@ return new class extends Migration
         $table->unique(['utilisateur_id', 'formation_id']); // un apprenant ne peut s'inscrire qu'une seule fois à la même formation
         $table->timestamps();
     });
+    Schema::table('enrollments', function (Blueprint $table) {
+    $table->dropForeign(['utilisateur_id']);
+});
 }
 
     /**
