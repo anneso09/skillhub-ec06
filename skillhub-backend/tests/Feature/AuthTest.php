@@ -7,10 +7,28 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
+// ─────────────────────────────────────────────────────────────────
+// AuthTest.php
+// Rôle : tests d'intégration pour l'authentification
+//
+// ⚠️  Ces tests testent les anciennes routes Laravel /api/register
+//     et /api/login qui sont maintenant gérées par Spring Boot.
+//     Ils sont conservés pour documenter le comportement attendu
+//     mais peuvent échouer en V2 si les routes sont commentées.
+//
+// Pour lancer : php artisan test --filter AuthTest
+// ─────────────────────────────────────────────────────────────────
 class AuthTest extends TestCase
 {
+    // RefreshDatabase recrée la BDD de test avant chaque test
+    // pour garantir un état propre et des tests indépendants
     use RefreshDatabase;
 
+    // ─────────────────────────────────────────────────────────
+    // Test 1 : inscription réussie
+    // Vérifie qu'un utilisateur peut créer un compte
+    // et que les données sont bien persistées en BDD
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_utilisateur_peut_sinscrire()
     {
@@ -22,6 +40,9 @@ class AuthTest extends TestCase
             'role'     => 'apprenant',
         ]);
 
+        // assertStatus(201) → création réussie
+        // assertJsonStructure → vérifie les clés présentes
+        // sans vérifier les valeurs exactes
         $response->assertStatus(201)
                  ->assertJsonStructure([
                      'message',
@@ -29,16 +50,25 @@ class AuthTest extends TestCase
                      'token',
                  ]);
 
+        // Vérifie que l'utilisateur existe réellement en BDD
         $this->assertDatabaseHas('users', [
             'email' => 'jean@test.com',
             'role'  => 'apprenant',
         ]);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 2 : connexion réussie
+    // Vérifie qu'un utilisateur existant peut se connecter
+    // et recevoir un token JWT
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_utilisateur_peut_se_connecter()
     {
-        // Crée un user en base
+        // Crée un utilisateur directement en BDD via factory
+        // bcrypt() hashe le mot de passe comme le ferait
+        // l'application en production
         $user = User::factory()->create([
             'email'    => 'jean@test.com',
             'password' => bcrypt('password123'),
@@ -58,6 +88,11 @@ class AuthTest extends TestCase
                  ]);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 3 : connexion échoue avec mauvais mot de passe
+    // Vérifie que l'API renvoie 401 et non 200 ou 500
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function connexion_echoue_avec_mauvais_mot_de_passe()
     {
@@ -68,25 +103,35 @@ class AuthTest extends TestCase
 
         $response = $this->postJson('/api/login', [
             'email'    => 'jean@test.com',
-            'password' => 'mauvaismdp',
+            'password' => 'mauvaismdp', // ← mot de passe incorrect
         ]);
 
+        // 401 Unauthorized = identifiants incorrects
         $response->assertStatus(401);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 4 : email déjà utilisé
+    // Vérifie qu'on ne peut pas créer deux comptes
+    // avec le même email
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function inscription_echoue_si_email_deja_utilise()
     {
+        // Premier utilisateur créé avec cet email
         User::factory()->create(['email' => 'jean@test.com']);
 
+        // Deuxième tentative avec le même email
         $response = $this->postJson('/api/register', [
             'nom'      => 'Dupont',
             'prenom'   => 'Jean',
-            'email'    => 'jean@test.com',
+            'email'    => 'jean@test.com', // ← email déjà pris
             'password' => 'password123',
             'role'     => 'apprenant',
         ]);
 
+        // 422 Unprocessable Entity = validation échouée
         $response->assertStatus(422);
     }
 }

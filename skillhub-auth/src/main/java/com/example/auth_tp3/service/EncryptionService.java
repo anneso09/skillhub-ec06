@@ -1,124 +1,158 @@
 package com.example.auth_tp3.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.SecureRandom;
-import java.util.Base64;
 
-/**
- * Service de chiffrement AES-GCM.
- * Chiffre et déchiffre les mots de passe avec la Master Key.
- *
- * AES = algorithme de chiffrement standard très solide.
- * GCM = mode qui garantit à la fois le chiffrement ET l'intégrité.
- *       Si quelqu'un modifie le texte chiffré, le déchiffrement échoue.
- *
- * Format de stockage : v1:Base64(iv):Base64(ciphertext)
- * - v1 = version du format (pour pouvoir évoluer plus tard)
- * - iv = vecteur d'initialisation aléatoire (différent à chaque chiffrement)
- * - ciphertext = le mot de passe chiffré
- *
- * IMPORTANT : La Master Key ne doit JAMAIS être dans le code.
- * Elle est injectée via la variable d'environnement APP_MASTER_KEY.
- * Si elle est absente, l'application refuse de démarrer.
- */
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+// ─────────────────────────────────────────────────────────────────
+// EncryptionService.java
+// Rôle : chiffrement et déchiffrement des mots de passe (AES-GCM)
+//
+// Pourquoi AES-GCM et pas BCrypt ?
+//   BCrypt est un hash à sens unique — on ne peut pas retrouver
+//   le mot de passe original. AES-GCM est réversible, ce qui
+//   permet à AuthService.login() de comparer les mots de passe.
+//
+// Format de stockage en BDD : v1:Base64(iv):Base64(ciphertext)
+//   - v1         : version du format (pour évoluer si besoin)
+//   - iv         : vecteur d'initialisation aléatoire
+//   - ciphertext : mot de passe chiffré
+//
+// ⚠️  La Master Key (APP_MASTER_KEY) ne doit JAMAIS être
+//     dans le code ou commitée sur Git — uniquement dans .env
+// ─────────────────────────────────────────────────────────────────
 @Service
 public class EncryptionService {
 
     // Taille du vecteur d'initialisation en bytes
-    private static final int GCM_IV_LENGTH = 12;
+    // 12 bytes = taille recommandée pour AES-GCM
+    private static final int GCM_IV_LENGTH  = 12;
 
     // Taille du tag d'authentification GCM en bits
+    // 128 bits = taille maximale, garantit l'intégrité des données
     private static final int GCM_TAG_LENGTH = 128;
 
-    // La Master Key injectée depuis la variable d'environnement
-    // ${APP_MASTER_KEY} = Spring lit la variable d'environnement APP_MASTER_KEY
+    // Clé AES dérivée depuis APP_MASTER_KEY
+    // final = immuable après initialisation dans le constructeur
     private final SecretKey masterKey;
 
-    // SecureRandom est thread-safe et coûteux à créer
-    // On le crée une seule fois et on le réutilise
+    // SecureRandom génère des nombres vraiment aléatoires
+    // (contrairement à Random qui est prévisible)
+    // On le crée une seule fois car c'est coûteux à instancier
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * Constructeur — vérifie que la Master Key est présente au démarrage.
-     * Si APP_MASTER_KEY est absente → l'application refuse de démarrer.
-     *
-     * @param masterKeyValue La valeur de APP_MASTER_KEY
-     */
+
+    // ─────────────────────────────────────────────────────────
+    // Constructeur
+    //
+    // @Value("${app.master.key}") injecte la valeur de
+    // APP_MASTER_KEY depuis application.properties / .env
+    //
+    // Si la clé est absente au démarrage → exception immédiate
+    // L'application refuse de démarrer sans sa clé de chiffrement
+    // C'est un comportement voulu : mieux vaut crasher au démarrage
+    // que de stocker des mots de passe non chiffrés en silence
+    // ─────────────────────────────────────────────────────────
     public EncryptionService(@Value("${app.master.key}") String masterKeyValue) {
+
         if (masterKeyValue == null || masterKeyValue.isBlank()) {
             throw new IllegalStateException(
-                    "APP_MASTER_KEY est absente ! L'application ne peut pas démarrer sans la Master Key."
+                "APP_MASTER_KEY est absente ! " +
+                "L'application ne peut pas démarrer sans la Master Key."
             );
         }
 
-        // On dérive une clé AES de 256 bits depuis la Master Key
-        // On padde ou tronque à exactement 32 bytes pour AES-256
+        // On dérive une clé AES-256 depuis la Master Key
+        // AES-256 nécessite exactement 32 bytes (256 bits)
+        // On padde avec des zéros si la clé est trop courte,
+        // on tronque si elle est trop longue
         byte[] keyBytes = masterKeyValue.getBytes();
-        byte[] aesKey = new byte[32];  // 32 bytes = 256 bits
+        byte[] aesKey   = new byte[32];
         System.arraycopy(keyBytes, 0, aesKey, 0, Math.min(keyBytes.length, 32));
-        this.masterKey = new SecretKeySpec(aesKey, "AES");
+        this.masterKey  = new SecretKeySpec(aesKey, "AES");
     }
 
-    /**
-     * Chiffre un mot de passe avec AES-GCM.
-     * Génère un IV aléatoire à chaque appel — deux chiffrements du même
-     * mot de passe donnent des résultats différents (sécurité renforcée).
-     *
-     * @param plaintext Le mot de passe en clair à chiffrer
-     * @return Le mot de passe chiffré au format "v1:Base64(iv):Base64(cipher)"
-     */
+
+    // ─────────────────────────────────────────────────────────
+    // Chiffrement AES-GCM
+    //
+    // Appelé par AuthService.register() avant de sauvegarder
+    // l'utilisateur en BDD.
+    //
+    // L'IV est regénéré aléatoirement à chaque appel :
+    // deux chiffrements du même mot de passe donnent des
+    // résultats différents — empêche les attaques par
+    // comparaison de hash (rainbow tables)
+    // ─────────────────────────────────────────────────────────
     public String encrypt(String plaintext) throws Exception {
-        // Génère un IV aléatoire — différent à chaque chiffrement
-        // Sans IV aléatoire, deux mots de passe identiques donneraient
-        // le même résultat chiffré — ce serait une faille de sécurité
+
+        // Génération de l'IV aléatoire
         byte[] iv = new byte[GCM_IV_LENGTH];
         secureRandom.nextBytes(iv);
 
-        // Configure le chiffrement AES-GCM
+        // Configuration du cipher AES en mode GCM sans padding
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        cipher.init(Cipher.ENCRYPT_MODE, masterKey, parameterSpec);
+        cipher.init(
+            Cipher.ENCRYPT_MODE,
+            masterKey,
+            new GCMParameterSpec(GCM_TAG_LENGTH, iv)
+        );
 
-        // Chiffre le mot de passe
+        // Chiffrement du mot de passe
         byte[] ciphertext = cipher.doFinal(plaintext.getBytes());
 
-        // Encode en Base64 pour stocker en base de données (texte lisible)
-        String ivBase64 = Base64.getEncoder().encodeToString(iv);
+        // Encodage Base64 pour stockage en BDD (texte lisible)
+        // Base64 convertit les bytes binaires en caractères ASCII
+        String ivBase64         = Base64.getEncoder().encodeToString(iv);
         String ciphertextBase64 = Base64.getEncoder().encodeToString(ciphertext);
 
-        // Format final : v1:iv:ciphertext
+        // Format final stocké en BDD
         return "v1:" + ivBase64 + ":" + ciphertextBase64;
     }
 
-    /**
-     * Déchiffre un mot de passe chiffré avec AES-GCM.
-     * Utilise la même Master Key pour retrouver le mot de passe original.
-     *
-     * @param encryptedData Le mot de passe chiffré au format "v1:iv:cipher"
-     * @return Le mot de passe en clair
-     */
+
+    // ─────────────────────────────────────────────────────────
+    // Déchiffrement AES-GCM
+    //
+    // Appelé par AuthService.login() pour comparer le mot de
+    // passe saisi avec celui stocké en BDD.
+    //
+    // GCM vérifie automatiquement l'intégrité des données :
+    // si le ciphertext a été modifié en BDD, le déchiffrement
+    // échoue avec une exception — protection contre la
+    // falsification des données
+    // ─────────────────────────────────────────────────────────
     public String decrypt(String encryptedData) throws Exception {
-        // Découpe le format "v1:iv:ciphertext"
+
+        // Découpage du format "v1:iv:ciphertext"
         String[] parts = encryptedData.split(":");
         if (parts.length != 3 || !parts[0].equals("v1")) {
-            throw new IllegalArgumentException("Format de données chiffrées invalide");
+            throw new IllegalArgumentException(
+                "Format de données chiffrées invalide"
+            );
         }
 
-        // Décode le Base64
-        byte[] iv = Base64.getDecoder().decode(parts[1]);
+        // Décodage Base64 → bytes
+        byte[] iv         = Base64.getDecoder().decode(parts[1]);
         byte[] ciphertext = Base64.getDecoder().decode(parts[2]);
 
-        // Configure le déchiffrement AES-GCM
+        // Configuration du cipher en mode déchiffrement
+        // avec le même IV que lors du chiffrement
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        cipher.init(Cipher.DECRYPT_MODE, masterKey, parameterSpec);
+        cipher.init(
+            Cipher.DECRYPT_MODE,
+            masterKey,
+            new GCMParameterSpec(GCM_TAG_LENGTH, iv)
+        );
 
-        // Déchiffre et retourne le mot de passe en clair
+        // Déchiffrement et retour du mot de passe en clair
         byte[] plaintext = cipher.doFinal(ciphertext);
         return new String(plaintext);
     }

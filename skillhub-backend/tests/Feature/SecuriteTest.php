@@ -9,6 +9,20 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use PHPUnit\Framework\Attributes\Test;
 
+// ─────────────────────────────────────────────────────────────────
+// SecuriteTest.php
+// Rôle : tests de sécurité et de contrôle d'accès
+//
+// Vérifie que les règles de permissions sont bien appliquées :
+//   - utilisateur non authentifié → 401
+//   - mauvais rôle → 403
+//   - formateur modifie la formation d'un autre → 403
+//
+// Ce sont les tests les plus importants du CDC —
+// ils valident que la sécurité fonctionne correctement
+//
+// Pour lancer : php artisan test --filter SecuriteTest
+// ─────────────────────────────────────────────────────────────────
 class SecuriteTest extends TestCase
 {
     use RefreshDatabase;
@@ -18,9 +32,15 @@ class SecuriteTest extends TestCase
         return JWTAuth::fromUser($user);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 1 : sans token → 401
+    // Un visiteur non connecté ne peut pas créer de formation
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_utilisateur_non_authentifie_ne_peut_pas_creer_une_formation()
     {
+        // Requête sans header Authorization
         $response = $this->postJson('/api/formations', [
             'titre'       => 'Formation test',
             'description' => 'Description test',
@@ -28,9 +48,15 @@ class SecuriteTest extends TestCase
             'niveau'      => 'Débutant',
         ]);
 
+        // 401 = token manquant (géré par JwtVerifyMiddleware)
         $response->assertStatus(401);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 2 : apprenant tente de créer une formation → 403
+    // Vérifie que le middleware role:formateur fonctionne
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_apprenant_ne_peut_pas_creer_une_formation()
     {
@@ -44,9 +70,19 @@ class SecuriteTest extends TestCase
             'niveau'      => 'Débutant',
         ], ['Authorization' => "Bearer $token"]);
 
+        // 403 = authentifié mais rôle insuffisant
+        // (géré par CheckRole middleware)
         $response->assertStatus(403);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 3 : formateur modifie la formation d'un autre → 403
+    // Vérifie la vérification de propriété dans update()
+    // C'est une deuxième ligne de défense indépendante
+    // du middleware — même un formateur valide ne peut
+    // pas modifier les formations des autres
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_formateur_ne_peut_pas_modifier_la_formation_dun_autre()
     {
@@ -54,12 +90,12 @@ class SecuriteTest extends TestCase
         $formateur2 = User::factory()->create(['role' => 'formateur']);
         $token2     = $this->getToken($formateur2);
 
-        // Formation créée par formateur1
+        // Formation appartenant à formateur1
         $formation = Formation::factory()->create([
             'formateur_id' => $formateur1->id,
         ]);
 
-        // Formateur2 essaie de modifier
+        // Formateur2 tente de modifier la formation de formateur1
         $response = $this->putJson("/api/formations/{$formation->id}", [
             'titre'       => 'Tentative de modification',
             'description' => $formation->description,
@@ -67,9 +103,15 @@ class SecuriteTest extends TestCase
             'niveau'      => $formation->niveau,
         ], ['Authorization' => "Bearer $token2"]);
 
+        // 403 = vérifié dans FormationController.update()
         $response->assertStatus(403);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 4 : profil sans token → 401
+    // Vérifie que /api/profile est bien protégé
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_utilisateur_non_authentifie_ne_peut_pas_voir_son_profil()
     {
@@ -78,6 +120,12 @@ class SecuriteTest extends TestCase
         $response->assertStatus(401);
     }
 
+
+    // ─────────────────────────────────────────────────────────
+    // Test 5 : apprenant accède au dashboard formateur → 403
+    // Vérifie que /api/formateur/formations est bien
+    // réservé aux formateurs
+    // ─────────────────────────────────────────────────────────
     #[Test]
     public function un_apprenant_ne_peut_pas_acceder_au_dashboard_formateur()
     {
@@ -85,9 +133,10 @@ class SecuriteTest extends TestCase
         $token     = $this->getToken($apprenant);
 
         $response = $this->getJson('/api/formateur/formations', [
-            'Authorization' => "Bearer $token"
+            'Authorization' => "Bearer $token",
         ]);
 
+        // 403 = authentifié mais rôle apprenant insuffisant
         $response->assertStatus(403);
     }
 }

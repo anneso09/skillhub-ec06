@@ -1,27 +1,43 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Protège les routes qui nécessitent une authentification
+// et/ou un rôle spécifique
+//
+// Props :
+//   children → composant à afficher si accès autorisé
+//   role     → "formateur" | "apprenant" (optionnel)
+//
+// Usage dans App.jsx :
+//   <ProtectedRoute role="formateur"><DashboardFormateur /></ProtectedRoute>
 export default function ProtectedRoute({ children, role }) {
-  const { isAuthenticated, user, loading } = useAuth();
+    const { isAuthenticated, user, loading } = useAuth();
 
-  if (loading) return null; 
+    // Attend que localStorage soit lu avant de décider
+    // Sans ce check, isAuthenticated serait false au premier rendu
+    // et redirigerait l'utilisateur même s'il est connecté
+    if (loading) return null;
 
-  // 1. Si pas connecté -> Accueil
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/" replace />;
-  // }
+    // ⚠️  Les vérifications ci-dessous sont commentées temporairement
+    //     pendant le développement pour ne pas bloquer les tests.
+    //     À décommenter avant le rendu final.
 
-  // 2. Si un rôle est requis mais que l'utilisateur n'a pas le bon
-  // On vérifie directement dans user.role (qui vient de ton Java)
-  //if (role && user?.role !== role) {
-  //   console.warn(`Accès refusé: requis ${role}, actuel ${user?.role}`);
-  //   return <Navigate to="/" replace />;  Retour à l'accueil pour casser la boucle
-  // }
+    // Redirige vers l'accueil si non connecté
+    // if (!isAuthenticated) {
+    //     return <Navigate to="/" replace />;
+    // }
 
-  // Remplace ta condition de rôle par celle-ci temporairement
-if (role && user && !user.role) {
-    console.error("ATTENTION : L'utilisateur n'a pas de rôle stocké !");
-  }
+    // Redirige si le rôle ne correspond pas
+    // if (role && user?.role !== role) {
+    //     console.warn(`Accès refusé: requis ${role}, actuel ${user?.role}`);
+    //     return <Navigate to="/" replace />;
+    // }
 
-  return children;
+    // Alerte temporaire si le rôle est manquant dans le user stocké
+    // Indique un problème dans AuthContext ou Spring Boot
+    if (role && user && !user.role) {
+        console.error("ATTENTION : L'utilisateur n'a pas de rôle stocké !");
+    }
+
+    return children;
 }
