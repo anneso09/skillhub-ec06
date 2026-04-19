@@ -5,8 +5,8 @@ import styles from "./Navbar.module.css";
 
 export default function Navbar({ onOpenLogin, onOpenRegister }) {
   const { isAuthenticated, isFormateur, user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -23,8 +23,21 @@ export default function Navbar({ onOpenLogin, onOpenRegister }) {
     ? `${styles.navLink} ${styles.navLinkActive}`
     : styles.navLink;
 
+  // ─────────────────────────────────────────────────────────────
+  // Initiales de l'avatar : on prend la 1ère lettre du prénom
+  // Si prenom est undefined (session pas encore chargée),
+  // on affiche "?" pour éviter un avatar vide
+  // ─────────────────────────────────────────────────────────────
+  const initiale = user?.prenom?.charAt(0).toUpperCase() ?? "?";
+
+  // Nom complet affiché à côté de l'avatar
+  const fullName = user?.prenom && user?.nom
+    ? `${user.prenom} ${user.nom}`
+    : user?.email ?? "";
+
   return (
     <nav className={styles.navbar}>
+
       {/* Logo */}
       <Link to="/" className={styles.logo}>
         Skill<span className={styles.logoAccent}>Hub</span>
@@ -38,7 +51,6 @@ export default function Navbar({ onOpenLogin, onOpenRegister }) {
 
         {!isAuthenticated ? (
           <>
-            {/* ← MODIFICATION ICI : plus de <Link>, on appelle les props */}
             <button className={styles.btnConnexion} onClick={onOpenLogin}>
               Connexion
             </button>
@@ -47,31 +59,34 @@ export default function Navbar({ onOpenLogin, onOpenRegister }) {
             </button>
           </>
         ) : (
-          /* Connecté — profil + dropdown */
+          /* ── Connecté : avatar + dropdown ── */
           <div
             className={styles.profileWrapper}
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
           >
             <div className={styles.profileTrigger}>
-              <div
-                className={`${styles.avatar} ${isFormateur ? styles.avatarFormateur : styles.avatarApprenant}`}
-              >
-                {user?.prenom?.charAt(0).toUpperCase()}
+
+              {/* Avatar rond avec initiale du prénom */}
+              <div className={`${styles.avatar} ${isFormateur ? styles.avatarFormateur : styles.avatarApprenant}`}>
+                {initiale}
               </div>
-              <span className={styles.profileName}>
-                {user?.prenom} {user?.nom}
-              </span>
+
+              {/* Prénom + Nom à côté de l'avatar */}
+              <span className={styles.profileName}>{fullName}</span>
             </div>
 
             {dropdownOpen && (
               <div className={styles.dropdown}>
+
                 <div className={styles.dropdownHeader}>
-                  <div className={styles.dropdownName}>{user?.name}</div>
+                  {/* ✅ Corrigé : user.name → user.prenom + user.nom */}
+                  <div className={styles.dropdownName}>{fullName}</div>
                   <div className={styles.dropdownRole}>
                     {isFormateur ? "Formateur" : "Apprenant"}
                   </div>
                 </div>
+
                 <div className={styles.dropdownBody}>
                   <button
                     className={styles.dropdownBtn}
@@ -90,6 +105,7 @@ export default function Navbar({ onOpenLogin, onOpenRegister }) {
                     🚪 Se déconnecter
                   </button>
                 </div>
+
               </div>
             )}
           </div>

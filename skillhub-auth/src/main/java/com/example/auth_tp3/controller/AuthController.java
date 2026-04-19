@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-// import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,8 +29,8 @@ public class AuthController {
     private final JwtService jwtService;
 
     public AuthController(AuthService authService,
-                          UserRepository userRepository,
-                          JwtService jwtService) {
+            UserRepository userRepository,
+            JwtService jwtService) {
         this.authService = authService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
@@ -53,28 +52,32 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Inscription réussie");
         response.put("email", user.getEmail());
+        response.put("nom", user.getNom());       // ✅ ajouté
+        response.put("prenom", user.getPrenom()); // ✅ ajouté
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // POST /api/auth/login
     @PostMapping("/auth/login")
-    public ResponseEntity<Map<String, Object>> login(
-            @RequestBody LoginRequest request) throws Exception {
+public ResponseEntity<Map<String, Object>> login(
+        @RequestBody LoginRequest request) throws Exception {
 
-        String token = authService.login(
-                request.getEmail(),
-                request.getPassword()
-        );
+    String token = authService.login(
+            request.getEmail(),
+            request.getPassword()
+    );
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+    User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("accessToken", token);
-        response.put("role", user.getRole());
+    Map<String, Object> response = new HashMap<>();
+    response.put("accessToken", token);
+    response.put("role",   user.getRole());
+    response.put("nom",    user.getNom());    // ✅ ajouté
+    response.put("prenom", user.getPrenom()); // ✅ ajouté
+    response.put("email",  user.getEmail());  // ✅ ajouté
 
-        return ResponseEntity.ok(response);
-    }
+    return ResponseEntity.ok(response);
+}
 
     // POST /api/auth/validate
     @PostMapping("/auth/validate")

@@ -55,7 +55,7 @@ export default function DashboardFormateur() {
   const totalApprenants = formations.reduce((acc, f) => acc + (f.enrollments_count ?? 0), 0);
   const totalVues       = formations.reduce((acc, f) => acc + (f.nombre_vues ?? f.nombre_vues ?? 0), 0);
 
-  const prenom = user?.prenom ?? user?.name ?? '';
+  const prenom = user?.prenom ?? '';
 
   return (
     <div className={styles.page}>

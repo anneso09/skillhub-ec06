@@ -1,109 +1,107 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from 'axios';
-// import { SPRING_BOOT_URL } from '../config/api';
 import authApi from "../api/authApi";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [user, setUser]       = useState(null);
+  const [token, setToken]     = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Rehydrate au refresh de page
+  // ─────────────────────────────────────────────────────────────
+  // Rehydratation au refresh de page
+  // Quand l'utilisateur rafraîchit, React repart de zéro.
+  // On relit localStorage pour restaurer la session sans forcer
+  // un nouveau login.
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const storedToken = localStorage.getItem("skillhub_token");
-    const storedUser = localStorage.getItem("skillhub_user");
+    const storedUser  = localStorage.getItem("skillhub_user");
+
     if (storedToken && storedUser) {
       setToken(storedToken);
       const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser); // <--- Vérifie que parsedUser contient bien .role
-    console.log("Utilisateur rechargé:", parsedUser);
+      setUser(parsedUser);
+      console.log("Session restaurée :", parsedUser);
     }
+
+    // Important : loading passe à false dans tous les cas
+    // Sinon l'app reste bloquée sur l'écran de chargement
     setLoading(false);
   }, []);
 
 
+  // ─────────────────────────────────────────────────────────────
   // Login
-// const login = async (email, password) => {
-//   try {
+  // Appelle Spring Boot (port 8080) qui renvoie :
+  // { accessToken, role, nom, prenom, email }
+  // ─────────────────────────────────────────────────────────────
+  const login = async (email, password) => {
+    try {
+      const response = await authApi.post("/auth/login", { email, password });
 
-//     const response = await authApi.post("/auth/login", { email, password });
+      const receivedToken = response.data.accessToken;
 
-//     const token = response.data.accessToken; 
+      if (!receivedToken) {
+        throw new Error("Token non reçu de Spring Boot");
+      }
 
-//     if (!token) {
-//         throw new Error("Token non reçu du serveur");
-//     }
+      // ✅ On récupère maintenant nom et prenom depuis la réponse
+      // Spring Boot doit les renvoyer (on vient de le corriger)
+      const userData = {
+        email:  response.data.email  || email,
+        role:   response.data.role,
+        nom:    response.data.nom,    // ✅ ajouté
+        prenom: response.data.prenom, // ✅ ajouté
+      };
 
-//     const userData = {
-//       email: email,
-//       role: "apprenant" 
-//     };
+      // On stocke token et user séparément dans localStorage
+      // userData est sérialisé en JSON car localStorage ne stocke
+      // que des strings
+      localStorage.setItem("skillhub_token", receivedToken);
+      localStorage.setItem("skillhub_user",  JSON.stringify(userData));
 
-//     setUser(userData);
-//     localStorage.setItem("skillhub_token", token);
-//     localStorage.setItem("skillhub_user", JSON.stringify(userData));
+      setToken(receivedToken);
+      setUser(userData);
 
-//     return userData;
-//   } catch (error) {
-//     console.error("Erreur de connexion :", error);
-//     throw error;
-//   }
-// };
+      return userData;
 
-const login = async (email, password) => {
-        try {
-            // On envoie email/password (comme son handleLogin le fait)
-            const response = await authApi.post("/auth/login", { email, password });
+    } catch (error) {
+      console.error("Erreur login :", error);
+      throw error;
+    }
+  };
 
-            // ADAPTATION 1 : On récupère accessToken
-            const token = response.data.accessToken;
 
-            // ADAPTATION 2 : On crée l'objet utilisateur manuellement
-            // Puisque son Java ne renvoie pas le rôle, on l'injecte ici
-            const userData = {
-                email: email,
-                role: response.data.role // On le force pour débloquer tes ProtectedRoutes
-            };
-
-            // Stockage pour rester connecté au rafraîchissement
-            localStorage.setItem("skillhub_token", token);
-            localStorage.setItem("skillhub_user", JSON.stringify(userData));
-            
-            setUser(userData);
-            return userData;
-        } catch (error) {
-            console.error("Erreur login adaptée:", error);
-            throw error;
-        }
-    };
-
-// Register
-const register = async (formData) => {
-    // Appel vers Spring Boot au lieu de Laravel
+  // ─────────────────────────────────────────────────────────────
+  // Register
+  // Appelle Spring Boot pour créer le compte.
+  // On envoie exactement les champs attendus par RegisterRequest.java
+  // ─────────────────────────────────────────────────────────────
+  const register = async (formData) => {
     await authApi.post("/auth/register", {
-      nom: formData.nom,
-      prenom: formData.prenom,
-      email: formData.email,
+      nom:      formData.nom,
+      prenom:   formData.prenom,
+      email:    formData.email,
       password: formData.password,
-      role: formData.role,
+      role:     formData.role,
     });
   };
 
+
+  // ─────────────────────────────────────────────────────────────
   // Logout
-  const logout = async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch (e) {
-      // déconnexion front même si erreur réseau
-    } finally {
-      localStorage.removeItem("skillhub_token");
-      localStorage.removeItem("skillhub_user");
-      setToken(null);
-      setUser(null);
-    }
+  // On vide localStorage et les states React.
+  // L'appel API est optionnel (Spring Boot JWT est stateless —
+  // il n'y a pas de session serveur à détruire).
+  // ─────────────────────────────────────────────────────────────
+  const logout = () => {
+    localStorage.removeItem("skillhub_token");
+    localStorage.removeItem("skillhub_user");
+    setToken(null);
+    setUser(null);
   };
+
 
   return (
     <AuthContext.Provider
@@ -111,9 +109,10 @@ const register = async (formData) => {
         user,
         token,
         loading,
-        isAuthenticated: !!token,
-        isFormateur: user?.role === "formateur",
-        isApprenant: user?.role === "apprenant",
+        // ✅ isAuthenticated basé sur token ET user
+        isAuthenticated: !!token && !!user,
+        isFormateur:     user?.role === "formateur",
+        isApprenant:     user?.role === "apprenant",
         login,
         register,
         logout,

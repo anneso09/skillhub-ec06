@@ -61,7 +61,7 @@ export default function DashboardApprenant() {
     ? Math.round(enrollments.reduce((acc, e) => acc + (e.progression ?? 0), 0) / total)
     : 0;
 
-  const prenom = user?.prenom ?? user?.name ?? '';
+  const prenom = user?.prenom ?? '';
 
   return (
     <div className={styles.page}>
