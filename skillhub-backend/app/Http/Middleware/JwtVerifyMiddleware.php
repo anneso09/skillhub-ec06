@@ -70,7 +70,7 @@ class JwtVerifyMiddleware
                 $response = Http::timeout(5)->post(
                     // En local : Spring Boot tourne sur 127.0.0.1:8080
                     // En Docker : remplacer par http://skillhub-auth:8080
-                    'http://127.0.0.1:8080/api/auth/validate',
+                    env('AUTH_SERVICE_URL', 'http://skillhub-auth:8080') . '/api/auth/validate',
                     ['token' => $token]
                 );
 

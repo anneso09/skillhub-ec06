@@ -14,7 +14,6 @@ import org.springframework.web.filter.CorsFilter;
 // bloqués par le navigateur quand ils appellent Spring Boot
 // car ils viennent d'origines (ports) différentes
 // ─────────────────────────────────────────────────────────────────
-
 // @Configuration indique à Spring Boot de lire cette classe
 // au démarrage et d'enregistrer les beans qu'elle définit
 @Configuration
@@ -34,11 +33,13 @@ public class CorsConfig {
         // peut envoyer soit "localhost" soit "127.0.0.1"
         config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedOrigin("http://127.0.0.1:5173");
+        config.addAllowedOrigin("http://localhost:3000");   // React Docker
+        config.addAllowedOrigin("http://localhost:8000");   // Laravel
+        config.addAllowedOrigin("http://localhost:80");     // nginx Docker
 
         // ⚠️  À ajouter pour le Jour 2 (Docker + Laravel)
         // config.addAllowedOrigin("http://localhost:8000"); // Laravel
         // config.addAllowedOrigin("http://localhost:80");   // nginx Docker
-
         // ── Méthodes HTTP autorisées ───────────────────────────
         // "*" autorise GET, POST, PUT, DELETE, OPTIONS...
         // OPTIONS est indispensable — c'est la "preflight request"
