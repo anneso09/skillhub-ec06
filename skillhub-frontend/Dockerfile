@@ -7,21 +7,17 @@
  
 # ── Stage 1 : Builder ─────────────────────────────────────────────
 FROM node:20-alpine AS builder
- 
+
 WORKDIR /app
- 
-# Copie uniquement package.json d'abord
-# Si les dépendances ne changent pas, Docker réutilise le cache
-# et ne relance pas npm install à chaque build
+
 COPY package.json package-lock.json ./
- 
-RUN npm ci
- 
-# Copie le reste du code source
+
+# npm install au lieu de npm ci car le package-lock.json
+# est désynchronisé — npm install le met à jour automatiquement
+RUN npm install
+
 COPY . .
- 
-# Compile le projet React/Vite
-# Le résultat est dans le dossier dist/
+
 RUN npm run build
  
  

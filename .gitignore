@@ -13,3 +13,6 @@ skillhub-frontend/build/
 .vscode/
 .idea/
 *.DS_Store
+
+# Racine
+.env
