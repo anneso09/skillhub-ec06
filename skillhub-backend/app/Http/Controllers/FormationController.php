@@ -93,6 +93,7 @@ class FormationController extends Controller
         if (!$formation) {
             return response()->json(['message' => 'Formation introuvable'], 404);
         }
+        $formation->formateur->loadCount('formations');
 
         // Incrémente nombre_vues directement en BDD
         // increment() fait un UPDATE atomique — pas de race condition
