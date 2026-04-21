@@ -37,12 +37,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
-          extensions: pdo, pdo_sqlite, sqlite3
+          extensions: pdo, pdo_sqlite, sqlite3, mongodb-1.20.0
           coverage: none
 
       - name: Install backend dependencies
         working-directory: skillhub-backend
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --ignore-platform-req=ext-mongodb
 
       - name: Run Laravel tests
         working-directory: skillhub-backend
