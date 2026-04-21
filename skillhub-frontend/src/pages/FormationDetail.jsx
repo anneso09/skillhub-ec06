@@ -16,7 +16,7 @@ function BadgeNiveau({ niveau }) {
 export default function FormationDetail({ onOpenLogin }) {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isAuthenticated, isApprenant } = useAuth();
+    const { isAuthenticated } = useAuth();
 
     const [formation,   setFormation]   = useState(null);
     const [modules,     setModules]     = useState([]);

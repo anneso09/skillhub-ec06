@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 // Usage dans App.jsx :
 //   <ProtectedRoute role="formateur"><DashboardFormateur /></ProtectedRoute>
 export default function ProtectedRoute({ children, role }) {
-    const { isAuthenticated, user, loading } = useAuth();
+    const { user, loading } = useAuth();
 
     // Attend que localStorage soit lu avant de décider
     // Sans ce check, isAuthenticated serait false au premier rendu
