@@ -40,10 +40,10 @@ jobs:
 
       - name: SonarCloud analysis
         uses: SonarSource/sonarcloud-github-action@master
-        env:           
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}         
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-            projectBaseDir: skillhub-frontend
+          projectBaseDir: skillhub-frontend
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
