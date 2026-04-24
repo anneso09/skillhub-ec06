@@ -39,7 +39,7 @@ Démarrage rapide
 
 Cloner le projet :
 
-git clone https://github.com/anneso09/skillhub-groupe.git
+
 
 cd skillhub-groupe
 
