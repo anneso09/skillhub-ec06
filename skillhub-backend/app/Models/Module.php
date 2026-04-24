@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 // ─────────────────────────────────────────────────────────────────
 // Module.php
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 // ─────────────────────────────────────────────────────────────────
 class Module extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'titre',        // titre du module
         'contenu',      // contenu pédagogique (texte, HTML...)

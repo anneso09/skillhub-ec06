@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 // ─────────────────────────────────────────────────────────────────
 // Enrollment.php
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
 // ─────────────────────────────────────────────────────────────────
 class Enrollment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'utilisateur_id', // FK → table users
         'formation_id',   // FK → table formations
