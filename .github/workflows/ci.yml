@@ -1,4 +1,4 @@
-name: CI/CD SkillHub V2
+name: CI/CD SkillHub EC06
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    name: Install, Lint, Test, Build
+    name: Install, Test, Analyze, Build
     runs-on: ubuntu-latest
 
     services:
@@ -22,28 +22,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: skillhub-frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: skillhub-frontend
-        run: npm install
-
-      - name: Lint frontend
-        working-directory: skillhub-frontend
-        run: npm run lint
-
-      - name: SonarCloud analysis
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: skillhub-frontend
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -69,11 +47,18 @@ jobs:
           MONGO_URI: mongodb://127.0.0.1:27017
           MONGODB_DATABASE: skillhub_logs_test
 
+      - name: SonarCloud analysis
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+
       - name: Build backend image
         run: docker build -t skillhub-api:${{ github.sha }} ./skillhub-backend
 
-      - name: Build frontend image
-        run: docker build -t skillhub-frontend:${{ github.sha }} ./skillhub-frontend
+      - name: Build auth image
+        run: docker build -t skillhub-auth:${{ github.sha }} ./skillhub-auth
 
   cd:
     name: Push images to Docker Hub
@@ -96,7 +81,7 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/skillhub-api:${{ github.sha }} ./skillhub-backend
           docker push ${{ secrets.DOCKER_USERNAME }}/skillhub-api:${{ github.sha }}
 
-      - name: Build and push frontend image
+      - name: Build and push auth image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/skillhub-frontend:${{ github.sha }} ./skillhub-frontend
-          docker push ${{ secrets.DOCKER_USERNAME }}/skillhub-frontend:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/skillhub-auth:${{ github.sha }} ./skillhub-auth
+          docker push ${{ secrets.DOCKER_USERNAME }}/skillhub-auth:${{ github.sha }}

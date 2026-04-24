@@ -41,6 +41,14 @@ class EnrollmentController extends Controller
 
         $userId = $request->auth_user_id;
 
+        // ── Vérification : max 5 formations par apprenant ─────
+        $nbInscriptions = Enrollment::where('utilisateur_id', $userId)->count();
+
+        if ($nbInscriptions >= 5) {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas vous inscrire à plus de 5 formations.',
+            ], 400);
+        }
         // Vérifie si une inscription existe déjà pour
         // cet apprenant sur cette formation
         // exists() est plus performant que first() — pas besoin
