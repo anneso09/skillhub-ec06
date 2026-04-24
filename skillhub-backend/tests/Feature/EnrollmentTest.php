@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Formation;
 use PHPUnit\Framework\Attributes\Test;
 use Tymon\JWTAuth\Facades\JWTAuth;
-
+use App\Models\Enrollment;
 // ─────────────────────────────────────────────────────────────────
 // EnrollmentTest.php
 // Rôle : tests d'intégration pour les inscriptions aux formations
@@ -187,5 +187,43 @@ class EnrollmentTest extends TestCase
         );
 
         $response->assertStatus(200);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Test 6 : un apprenant ne peut pas s'inscrire à plus de 5 formations
+    // Vérifie que le code HTTP 400 est retourné
+    // ─────────────────────────────────────────────────────────
+    #[Test]
+    public function test_un_apprenant_ne_peut_pas_sinscrire_a_plus_de_5_formations()
+    {
+        $apprenant = User::factory()->create(['role' => 'apprenant']);
+        $this->fakeSpringBoot('apprenant', $apprenant->id, $apprenant->email);
+        $token = JWTAuth::fromUser($apprenant);
+
+        // Créer un formateur pour les formations
+        $formateur = User::factory()->create(['role' => 'formateur']);
+
+        // Inscrire l'apprenant à 5 formations
+        for ($i = 0; $i < 5; $i++) {
+            $formation = Formation::factory()->create(['formateur_id' => $formateur->id]);
+            Enrollment::factory()->create([
+                'utilisateur_id' => $apprenant->id,
+                'formation_id'   => $formation->id,
+            ]);
+        }
+
+        // Tenter une 6ème inscription
+        $formation6 = Formation::factory()->create(['formateur_id' => $formateur->id]);
+
+        $response = $this->postJson(
+            "/api/formations/{$formation6->id}/inscription",
+            [],
+            ['Authorization' => "Bearer $token"]
+        );
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'message' => 'Vous ne pouvez pas vous inscrire à plus de 5 formations.',
+        ]);
     }
 }
